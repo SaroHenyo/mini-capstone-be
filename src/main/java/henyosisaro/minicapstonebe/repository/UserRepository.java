@@ -9,5 +9,6 @@ import java.math.BigInteger;
 public interface UserRepository extends JpaRepository<UserEntity, BigInteger> {
     UserEntity findByEmail(String email);
 
+    @Transactional
     void deleteByEmail(String email);
 }

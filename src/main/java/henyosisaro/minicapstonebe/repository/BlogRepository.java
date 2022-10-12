@@ -1,6 +1,6 @@
 package henyosisaro.minicapstonebe.repository;
 
-import henyosisaro.minicapstonebe.entity.ProductEntity;
+import henyosisaro.minicapstonebe.entity.BlogEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -9,9 +9,9 @@ import java.math.BigInteger;
 import java.util.UUID;
 
 @Repository
-public interface ProductRepository extends JpaRepository<ProductEntity, BigInteger> {
-    ProductEntity findByProductId(UUID productId);
+public interface BlogRepository extends JpaRepository<BlogEntity, BigInteger> {
+    BlogEntity findByBlogId(UUID blogId);
 
     @Transactional
-    void deleteByProductId(UUID productId);
+    void deleteByBlogId(UUID blogId);
 }

@@ -6,15 +6,11 @@ import java.time.ZonedDateTime;
 import java.util.UUID;
 
 @Data
-public class ProductDTO {
-
-    private UUID productId;
-    private String productName;
+public class BlogDTO {
+    private UUID blogId;
+    private String blogName;
+    private String blogAuthor;
     private String imageLink;
-    private float price;
-    private float ratings;
-    private String type;
-    private String filter;
     private String description;
     private ZonedDateTime createdDate;
     private ZonedDateTime modifiedDate;

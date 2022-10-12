@@ -18,17 +18,14 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(schema = SchemaConfiguration.SCHEMA_NAME, name = "PRODUCTS")
-public class ProductEntity {
+@Table(schema = SchemaConfiguration.SCHEMA_NAME, name = "POPULAR")
+public class PopularEntity {
     @Id
     private UUID productId;
     private String productName;
     private String imageLink;
     private float price;
-    private float ratings;
     private String type;
-    private String filter;
-    private String description;
     private ZonedDateTime createdDate;
     private ZonedDateTime modifiedDate;
 
@@ -36,7 +33,7 @@ public class ProductEntity {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
-        ProductEntity that = (ProductEntity) o;
+        PopularEntity that = (PopularEntity) o;
         return productId != null && Objects.equals(productId, that.productId);
     }
 

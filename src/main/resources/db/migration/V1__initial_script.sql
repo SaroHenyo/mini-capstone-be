@@ -20,7 +20,7 @@ CREATE TABLE saro.PRODUCTS (
        ratings float,
        type varchar(150),
        filter varchar(150),
-       description text,
+       description varchar,
        created_date TIMESTAMP WITH TIME ZONE,
        modified_date TIMESTAMP WITH TIME ZONE,
        PRIMARY KEY (product_id)
@@ -30,7 +30,8 @@ CREATE TABLE saro.POPULAR (
       product_id uuid,
       product_name varchar(150),
       image_link varchar(150),
-      description text,
+      price float,
+      type varchar(150),
       created_date TIMESTAMP WITH TIME ZONE,
       modified_date TIMESTAMP WITH TIME ZONE,
       PRIMARY KEY (product_id)
@@ -41,6 +42,7 @@ CREATE TABLE saro.BLOGS (
     blog_name varchar(150),
     blog_author varchar(150),
     image_link varchar(150),
+    description varchar,
     created_date TIMESTAMP WITH TIME ZONE,
     modified_date TIMESTAMP WITH TIME ZONE,
     PRIMARY KEY (blog_id)
