@@ -1,24 +1,21 @@
 package henyosisaro.minicapstonebe.service;
 
-import henyosisaro.minicapstonebe.dto.BlogDTO;
 import henyosisaro.minicapstonebe.dto.PopularDTO;
-import henyosisaro.minicapstonebe.entity.BlogEntity;
 import henyosisaro.minicapstonebe.entity.PopularEntity;
 import henyosisaro.minicapstonebe.exception.UserAlreadyExist;
-import henyosisaro.minicapstonebe.model.BlogRequest;
 import henyosisaro.minicapstonebe.model.PopularRequest;
-import henyosisaro.minicapstonebe.repository.BlogRepository;
 import henyosisaro.minicapstonebe.repository.PopularRepository;
 import henyosisaro.minicapstonebe.util.DateTimeUtil;
+import henyosisaro.minicapstonebe.util.S3StorageUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.io.IOException;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -28,6 +25,7 @@ public class PopularService {
     private final PopularRepository popularRepository;
     private final ModelMapper modelMapper;
     private final DateTimeUtil dateTimeUtil;
+    private final S3StorageUtil s3StorageUtil;
 
     public List<PopularDTO> getAllPopularProducts() {
 
@@ -73,5 +71,49 @@ public class PopularService {
         popularRepository.deleteByProductId(productId);
 
         return getAllPopularProducts();
+    }
+
+    public List<PopularDTO> uploadProductImage(UUID productId, MultipartFile file) {
+        // Initialize product
+        PopularEntity product = popularRepository.findByProductId(productId);
+        if (product == null) throw new IllegalStateException("Product doesn't exist");
+
+
+        // Check if file validity
+        s3StorageUtil.checkFile(file);
+
+        // Grab some meta data
+        Map<String, String> metadata = s3StorageUtil.getMetaData(file);
+
+        // Store the image in S3
+        String path = String.format("%s/%s", "minicapstone-mikez/saro/popular-products", productId);
+        String fileName = String.format("%s-%s", "popular-product", file.getOriginalFilename());
+        try {
+            s3StorageUtil.save(path, fileName, Optional.of(metadata), file.getInputStream());
+            popularRepository.save(PopularEntity
+                    .builder()
+                    .productId(product.getProductId())
+                    .productName(product.getProductName())
+                    .imageLink(fileName)
+                    .price(product.getPrice())
+                    .type(product.getType())
+                    .createdDate(product.getCreatedDate())
+                    .modifiedDate(dateTimeUtil.currentDate())
+                    .build());
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+
+        return getAllPopularProducts();
+    }
+
+    public byte[] downloadProductImage(UUID productId) {
+        // Initialize product
+        PopularEntity product = popularRepository.findByProductId(productId);
+        if (product == null) throw new IllegalStateException("Product doesn't exist");
+
+        String path = String.format("%s/%s", "minicapstone-mikez/saro/popular-products", productId);
+
+        return s3StorageUtil.download(path, product.getImageLink());
     }
 }

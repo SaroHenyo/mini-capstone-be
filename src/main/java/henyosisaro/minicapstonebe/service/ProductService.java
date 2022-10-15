@@ -6,15 +6,16 @@ import henyosisaro.minicapstonebe.exception.UserAlreadyExist;
 import henyosisaro.minicapstonebe.model.ProductRequest;
 import henyosisaro.minicapstonebe.repository.ProductRepository;
 import henyosisaro.minicapstonebe.util.DateTimeUtil;
+import henyosisaro.minicapstonebe.util.S3StorageUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.io.IOException;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -24,6 +25,7 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final ModelMapper modelMapper;
     private final DateTimeUtil dateTimeUtil;
+    private final S3StorageUtil s3StorageUtil;
 
     public List<ProductDTO> getAllProducts() {
 
@@ -38,6 +40,16 @@ public class ProductService {
         });
 
         return allProductsDTO;
+    }
+
+    public ProductDTO getProduct(UUID productId) {
+
+        // Get product from database
+        ProductEntity product = productRepository.findByProductId(productId);
+
+        if (product == null) throw new UserAlreadyExist("Product doesn't exist");
+
+        return modelMapper.map(product, ProductDTO.class);
     }
 
     public List<ProductDTO> addProduct(ProductRequest newProduct) {
@@ -72,5 +84,52 @@ public class ProductService {
         productRepository.deleteByProductId(productId);
 
         return getAllProducts();
+    }
+
+    public List<ProductDTO> uploadProductImage(UUID productId, MultipartFile file) {
+        // Initialize product
+        ProductEntity product = productRepository.findByProductId(productId);
+        if(product == null) throw new IllegalStateException("Product doesn't exist");
+
+        // Check if file validity
+        s3StorageUtil.checkFile(file);
+
+        // Grab some meta data
+        Map<String, String> metadata = s3StorageUtil.getMetaData(file);
+
+        // Store the image to s3 bucket
+        String path = String.format("%s/%s", "minicapstone-mikez/saro/products", productId);
+        String fileName = String.format("%s-%s", "product", file.getOriginalFilename());
+
+        try {
+            s3StorageUtil.save(path, fileName, Optional.of(metadata), file.getInputStream());
+            productRepository.save(ProductEntity
+                    .builder()
+                    .productId(product.getProductId())
+                    .productName(product.getProductName())
+                    .imageLink(fileName)
+                    .price(product.getPrice())
+                    .ratings(product.getRatings())
+                    .type(product.getType())
+                    .filter(product.getFilter())
+                    .description(product.getDescription())
+                    .createdDate(product.getCreatedDate())
+                    .modifiedDate(dateTimeUtil.currentDate())
+                    .build());
+        } catch (IOException e) {
+            throw  new IllegalStateException(e);
+        }
+
+        return getAllProducts();
+    }
+
+    public byte[] downloadProductImage(UUID productId) {
+        // Initialize product
+        ProductEntity product = productRepository.findByProductId(productId);
+        if(product == null) throw new IllegalStateException("Product doesn't exist");
+
+        String path = String.format("%s/%s", "minicapstone-mikez/saro/products", productId);
+
+        return s3StorageUtil.download(path, product.getImageLink());
     }
 }
