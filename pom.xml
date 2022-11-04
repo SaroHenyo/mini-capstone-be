@@ -15,9 +15,9 @@
     <description>mini-capstone-be</description>
     <properties>
         <!--        <java.version>19</java.version>-->
-        <psql.url>jdbc:postgresql://awsmikezdb2.cpvuzizi91jj.ap-northeast-1.rds.amazonaws.com:5432/mikezawsdb2</psql.url>
-        <psql.user>awspostgres</psql.user>
-        <psql.password>SUPERadmin101</psql.password>
+        <psql.url>jdbc:postgresql://localhost:5432</psql.url>
+        <psql.user>postgres</psql.user>
+        <psql.password>myfirstproject</psql.password>
     </properties>
 
     <dependencies>
